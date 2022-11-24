@@ -12,10 +12,20 @@ repos:
     -   id: debug-statements
     -   id: check-added-large-files
     -   id: requirements-txt-fixer
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v3.2.2
+    hooks:
+    -   id: pyupgrade
+        args: ['--py39-plus']
 -   repo: https://github.com/psf/black
     rev: 22.10.0
     hooks:
     -   id: black
+-   repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+    -   id: isort
+        args: ['-a', 'from __future__ import annotations', '--append-only']
 -   repo: https://github.com/PyCQA/flake8
     rev: 5.0.4
     hooks:
@@ -24,3 +34,4 @@ repos:
     rev: 'v0.991'
     hooks:
     -   id: mypy
+        additional_dependencies: ['numpy']

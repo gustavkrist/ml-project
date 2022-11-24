@@ -6,3 +6,5 @@
 #
 numpy==1.23.5
     # via mlp (pyproject.toml)
+tqdm==4.64.1
+    # via mlp (pyproject.toml)

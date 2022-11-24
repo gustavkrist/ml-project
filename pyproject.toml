@@ -5,23 +5,23 @@ build-backend = 'setuptools.build_meta'
 [project]
 name = 'mlp'
 description = 'Machine Learning Project Library'
-version = '0.0.1'
+version = '0.1.0'
 requires-python = '>=3.9'
-dependencies = [
-    'numpy'
-]
+dependencies = ['numpy', 'tqdm']
 
 [project.optional-dependencies]
-dev = [
-    'flake8',
-    'black',
-    'mypy'
-]
+dev = ['flake8', 'black', 'mypy', 'pip-tools']
+
+[tool.isort]
+profile = 'black'
 
 [tool.mypy]
-mypy_path = 'src'
+mypy_path = '$MYPY_CONFIG_FILE_DIR/src'
+plugins = ["numpy.typing.mypy_plugin"]
 check_untyped_defs = true
+disallow_untyped_defs = true
 disallow_any_generics = true
+disallow_any_unimported = true
 ignore_missing_imports = true
 no_implicit_optional = true
 show_error_codes = true

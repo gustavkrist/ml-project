@@ -148,3 +148,5 @@ data/
 .DS_Store
 
 environment.yaml
+
+_null-ls*
