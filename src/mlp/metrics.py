@@ -8,14 +8,16 @@ import numpy.typing as npt
 from mlp.types import IntegerArray, ScalarArray
 
 
-def gini_score(ys: IntegerArray) -> float:
+def gini_score(ys: IntegerArray) -> np.float_:
     _, counts = np.unique(ys, return_counts=True)
-    class_priors = np.array([count / sum(counts) for count in counts], dtype=np.float_)
-    gini_score: float = 1.0 - (class_priors**2).sum()
+    class_priors = np.array(
+        [count / np.sum(counts) for count in counts], dtype=np.float_
+    )
+    gini_score: np.float_ = 1.0 - (class_priors**2).sum()
     return gini_score
 
 
-def weighted_gini_array(y_left: IntegerArray, y_right: IntegerArray) -> float:
+def weighted_gini_array(y_left: IntegerArray, y_right: IntegerArray) -> np.float_:
     n_l = len(y_left)
     n_r = len(y_right)
     n_t = n_l + n_r
@@ -23,8 +25,8 @@ def weighted_gini_array(y_left: IntegerArray, y_right: IntegerArray) -> float:
 
 
 def weighted_gini(
-    n_t: int, n_l: int, n_r: int, imp_left: float, imp_right: float
-) -> float:
+    n_t: int, n_l: int, n_r: int, imp_left: np.float_, imp_right: np.float_
+) -> np.float_:
     p_l = n_l / n_t
     p_r = n_r / n_t
     return p_l * imp_left + p_r * imp_right

@@ -39,13 +39,13 @@ class Node:
         self,
         depth: int,
         tree: DecisionTreeClassifier,
-        impurity: float,
+        impurity: np.float_,
     ) -> None:
         self.depth = depth
         self.tree = tree
         self.impurity = impurity
-        self.feature: int | None = None
-        self.threshold: float | None = None
+        self.feature: np.int_ | None = None
+        self.threshold: np.float_ | None = None
         self.left: Node | None = None
         self.right: Node | None = None
         self.label: int | None = None
@@ -82,7 +82,7 @@ class Node:
 
     def _find_best_split(
         self, x: ScalarArray, y: ScalarArray
-    ) -> tuple[int, float, float, float, float] | None:
+    ) -> tuple[np.int_, np.float_, np.float_, np.float_, np.float_] | None:
         features = np.arange(x.shape[1])
         splits = {}
         for split_feature in features:

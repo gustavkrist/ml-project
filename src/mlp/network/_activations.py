@@ -38,7 +38,7 @@ def sigmoid_der(x: ScalarArray) -> npt.NDArray[np.float_]:
 
 
 def softmax(x: ScalarArray) -> npt.NDArray[np.float_]:
-    # TODO: Link to scipy documentation for softmax
+    # https://github.com/scipy/scipy/blob/v1.9.3/scipy/special/_logsumexp.py#L221
     x_max = np.amax(x, axis=1, keepdims=True)
     exp_x_shifted = np.exp(x - x_max)
     ret: npt.NDArray[np.float_] = exp_x_shifted / np.sum(

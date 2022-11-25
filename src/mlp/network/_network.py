@@ -90,8 +90,7 @@ class ForwardFeedNN:
             self._batch_loss_history: list[float] = []
             for x, y in mini_batches:
                 self._process_batch(x, y)
-            # TODO: Should this be summed?
-            loss = np.sum(self._batch_loss_history)
+            loss = np.mean(self._batch_loss_history)
             self.loss_history.append(loss)
             accuracy = accuracy_score(y_val, self.predict(x_val))
             if accuracy <= accuracy_max:
@@ -138,12 +137,11 @@ class ForwardFeedNN:
         w_grads = [np.zeros_like(w) for w in self.ws]
         b_grads = [np.zeros_like(b) for b in self.bs]
 
+        # Inspired by https://github.com/MichalDanielDobrzanski/DeepLearningPython/blob/2eae26e0bdcef314dcb18f13946a94320fb28a12/network2.py#L253 # noqa: E501
         # Output layer
-
-        dL_dz = (
-            acs[-1] - y
-        )  # This holds for binary CE loss with sigmoid or categorical CE loss with softmax  # noqa: E501
-        dzo_dw = np.dot(acs[-2].T, dL_dz)
+        # This holds for binary CE loss with sigmoid or categorical CE loss with softmax  # noqa: E501
+        dL_dz = acs[-1] - y
+        dzo_dw = acs[-2].T @ dL_dz
         w_grads[-1] = dzo_dw
         b_grads[-1] = dL_dz.sum(axis=0).reshape(1, -1)
 
@@ -151,8 +149,8 @@ class ForwardFeedNN:
         for i in range(2, len(self.layers)):
             z = zs[-i]
             da_dz = self.layers[-i].activation_der(z)
-            dL_dz = np.dot(dL_dz, self.ws[-i + 1].T) * da_dz
-            w_grads[-i] = np.dot(acs[-i - 1].T, dL_dz)
+            dL_dz = (dL_dz @ self.ws[-i + 1].T) * da_dz
+            w_grads[-i] = acs[-i - 1].T @ dL_dz
             b_grads[-i] = dL_dz.sum(axis=0).reshape(1, -1)
 
         self.ws = [
