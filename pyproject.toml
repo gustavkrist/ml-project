@@ -10,13 +10,13 @@ requires-python = '>=3.9'
 dependencies = ['numpy', 'tqdm']
 
 [project.optional-dependencies]
-dev = ['flake8', 'black', 'mypy', 'pip-tools']
+dev = ['flake8', 'black', 'mypy', 'pip-tools', 'types-tqdm']
 
 [tool.isort]
 profile = 'black'
 
 [tool.mypy]
-mypy_path = '$MYPY_CONFIG_FILE_DIR/src'
+mypy_path = '$MYPY_CONFIG_FILE_DIR/src:$MYPY_CONFIG_FILE_DIR/stubs'
 plugins = ["numpy.typing.mypy_plugin"]
 check_untyped_defs = true
 disallow_untyped_defs = true

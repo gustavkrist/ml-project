@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from collections.abc import Sequence
 from itertools import chain, groupby
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -14,11 +14,14 @@ from mlp.types import ScalarArray
 def one_hot(
     y: npt.NDArray[np.integer[Any]], categories: Sequence[int] | None = None
 ) -> npt.NDArray[np.int_]:
+    label: np.int_ | int = 0
     if categories is not None:
+        label = cast(int, label)
         y_one_hot = np.zeros((y.shape[0], len(categories)), dtype=np.int_)
         for i, label in enumerate(categories):
             y_one_hot[np.where(y == label), i] = 1
     else:
+        label = cast(np.int_, label)
         unique = np.unique(y)
         y_one_hot = np.zeros((y.shape[0], unique.shape[0]), dtype=np.int_)
         for i, label in enumerate(unique):
