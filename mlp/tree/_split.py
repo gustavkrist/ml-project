@@ -10,13 +10,16 @@ from mlp.types import IntegerArray, ScalarArray
 @nb.njit(
     nb.types.Tuple((nb.int64, nb.float64, nb.float64, nb.float64, nb.float64))(
         nb.float64[:, :], nb.int64[:]
-    )
+    ),
+    parallel=True,
+    nogil=True,
+    boundscheck=False,
 )
 def find_best_split(
     x: ScalarArray, y: IntegerArray
 ) -> tuple[np.int_, np.float_, np.float_, np.float_, np.float_]:
     splits = np.full((x.shape[1], 4), -1.0, dtype=np.float_)
-    for split_feature in range(x.shape[1]):
+    for split_feature in nb.prange(x.shape[1]):
         feature_vals = np.unique(x[:, split_feature])
         if len(feature_vals) < 2:
             continue
