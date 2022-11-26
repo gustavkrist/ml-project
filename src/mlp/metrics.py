@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from typing import Any
 
+import numba as nb
 import numpy as np
 import numpy.typing as npt
 
 from mlp.types import IntegerArray, ScalarArray
 
 
+@nb.njit(nb.float64(nb.int64[:]))
 def gini_score(ys: IntegerArray) -> np.float_:
-    _, counts = np.unique(ys, return_counts=True)
+    counts = np.bincount(ys)
     class_priors = np.array(
         [count / np.sum(counts) for count in counts], dtype=np.float_
     )
@@ -21,9 +23,13 @@ def weighted_gini_array(y_left: IntegerArray, y_right: IntegerArray) -> np.float
     n_l = len(y_left)
     n_r = len(y_right)
     n_t = n_l + n_r
-    return weighted_gini(n_t, n_l, n_r, gini_score(y_left), gini_score(y_right))
+    ret: np.float_ = weighted_gini(
+        n_t, n_l, n_r, gini_score(y_left), gini_score(y_right)
+    )
+    return ret
 
 
+@nb.njit(nb.float64(nb.int64, nb.int64, nb.int64, nb.float64, nb.float64))
 def weighted_gini(
     n_t: int, n_l: int, n_r: int, imp_left: np.float_, imp_right: np.float_
 ) -> np.float_:

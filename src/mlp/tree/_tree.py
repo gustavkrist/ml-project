@@ -1,15 +1,9 @@
-# TODO: Make this file
-# How to find best split?
-# 1. Try a random split for each feature
-# 2. Try the middle split for each feature
-# 3. Try a couple (reasonable amount) of splits for each feature
-#    - Random or equally split?
-# How to calculate gini of two child nodes? Just average?
 from __future__ import annotations
 
 import numpy as np
 
-from mlp.metrics import gini_score, weighted_gini
+from mlp.metrics import gini_score
+from mlp.tree._split import find_best_split
 from mlp.types import IntegerArray, ScalarArray
 
 
@@ -56,9 +50,9 @@ class Node:
         if not self.can_split(y):
             self.label = int(np.bincount(y).argmax())
             return
-        best_split_result = self._find_best_split(x, y)
+        best_split_result = find_best_split(x, y)
         # No splits were found, set label
-        if best_split_result is None:
+        if best_split_result[0] == -1:
             self.label = int(np.bincount(y).argmax())
             return
         split_feature, split_value, imp_split, imp_left, imp_right = best_split_result
@@ -79,39 +73,6 @@ class Node:
         self.right = Node(self.depth + 1, self.tree, imp_right)
         self.left.split(x_left, y_left)
         self.right.split(x_right, y_right)
-
-    def _find_best_split(
-        self, x: ScalarArray, y: ScalarArray
-    ) -> tuple[np.int_, np.float_, np.float_, np.float_, np.float_] | None:
-        features = np.arange(x.shape[1])
-        splits = {}
-        for split_feature in features:
-            feature_vals = np.unique(x[:, split_feature])
-            imps_at_feat = {}
-            if len(feature_vals) < 2:
-                continue
-            for val1, val2 in zip(feature_vals[:-1], feature_vals[1:]):
-                split_val = (val1 + val2) / 2
-                mask = x[:, split_feature] < split_val
-                col_mask = np.ones(x.shape[1], bool)
-                col_mask[split_feature] = False
-                y_left = y[mask]
-                y_right = y[~mask]
-                if len(y_left) == 0 or len(y_right) == 0:
-                    continue
-                imp_left = gini_score(y_left)
-                imp_right = gini_score(y_right)
-                impurity = weighted_gini(
-                    len(y), len(y_left), len(y_right), imp_left, imp_right
-                )
-                imps_at_feat[split_val] = (impurity, imp_left, imp_right)
-            best_split_val = max(iter(imps_at_feat), key=lambda x: imps_at_feat[x][0])
-            splits[split_feature] = (best_split_val, *imps_at_feat[best_split_val])
-        if len(splits) == 0:
-            return None
-        best_split_feature = max(iter(splits), key=lambda x: splits[x][1])
-        best_split_val, best_split_imp, imp_left, imp_right = splits[best_split_feature]
-        return best_split_feature, best_split_val, best_split_imp, imp_left, imp_right
 
     def predict(self, x: ScalarArray) -> int:
         if self.is_leaf:

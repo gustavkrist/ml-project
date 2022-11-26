@@ -4,7 +4,16 @@
 #
 #    pip-compile --output-file=requirements.txt pyproject.toml
 #
-numpy==1.23.5
+llvmlite==0.39.1
+    # via numba
+numba==0.56.4
     # via mlp (pyproject.toml)
+numpy==1.23.5
+    # via
+    #   mlp (pyproject.toml)
+    #   numba
 tqdm==4.64.1
     # via mlp (pyproject.toml)
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools

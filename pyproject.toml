@@ -7,7 +7,7 @@ name = 'mlp'
 description = 'Machine Learning Project Library'
 version = '0.1.0'
 requires-python = '>=3.9'
-dependencies = ['numpy', 'tqdm']
+dependencies = ['numpy', 'tqdm', 'numba']
 
 [project.optional-dependencies]
 dev = ['flake8', 'black', 'mypy', 'pip-tools', 'types-tqdm']
