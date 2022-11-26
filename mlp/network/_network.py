@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import TypeAlias, cast
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING:
+    from typing import TypeAlias
 
 import numpy as np
 import numpy.typing as npt
@@ -137,9 +140,9 @@ class ForwardFeedNN:
         w_grads = [np.zeros_like(w) for w in self.ws]
         b_grads = [np.zeros_like(b) for b in self.bs]
 
-        # Inspired by https://github.com/MichalDanielDobrzanski/DeepLearningPython/blob/2eae26e0bdcef314dcb18f13946a94320fb28a12/network2.py#L253 # noqa: E501
+        # Inspired by https://github.com/MichalDanielDobrzanski/DeepLearningPython/blob/2eae26e0bdcef314dcb18f13946a94320fb28a12/network2.py#L253 # noqa: E501, B950
         # Output layer
-        # This holds for binary CE loss with sigmoid or categorical CE loss with softmax  # noqa: E501
+        # This holds for binary CE loss with sigmoid or categorical CE loss with softmax
         dL_dz = acs[-1] - y
         dzo_dw = acs[-2].T @ dL_dz
         w_grads[-1] = dzo_dw

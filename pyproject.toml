@@ -9,6 +9,9 @@ version = '0.1.0'
 requires-python = '>=3.9'
 dependencies = ['numpy', 'tqdm', 'numba']
 
+[tool.setuptools]
+packages = ['mlp']
+
 [project.optional-dependencies]
 dev = ['flake8', 'black', 'mypy', 'pip-tools', 'types-tqdm']
 
