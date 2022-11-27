@@ -19,13 +19,13 @@ def one_hot(
     label: np.int_ | int = 0
     if categories is not None:
         label = cast(int, label)
-        y_one_hot = np.zeros((y.shape[0], len(categories)), dtype=np.int_)
+        y_one_hot = np.zeros((y.shape[0], len(categories)), dtype=np.int8, order="F")
         for i, label in enumerate(categories):
             y_one_hot[np.where(y == label), i] = 1
     else:
         label = cast(np.int_, label)
         unique = np.unique(y)
-        y_one_hot = np.zeros((y.shape[0], unique.shape[0]), dtype=np.int_)
+        y_one_hot = np.zeros((y.shape[0], unique.shape[0]), dtype=np.int8, order="F")
         for i, label in enumerate(unique):
             y_one_hot[np.where(y == label), i] = 1
     return y_one_hot

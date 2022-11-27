@@ -2,31 +2,38 @@ from __future__ import annotations
 
 import warnings
 
-import numba as nb
+import numexpr as ne
+
+# import numba as nb
 import numpy as np
 import numpy.typing as npt
 
 from mlp.types import ScalarArray
 
 
-@nb.njit(nb.float64[:, :](nb.float64[:, :]))
+# @nb.njit(nb.float64[:, :](nb.float64[:, :]))
 def relu(x: ScalarArray) -> ScalarArray:
-    return np.maximum(x, 0)
+    res: ScalarArray = ne.evaluate("where(x > 0, x, 0)", casting="no")
+    return res
 
 
-@nb.njit(nb.int64[:, :](nb.float64[:, :]))
+# @nb.njit(nb.int64[:, :](nb.float64[:, :]))
 def relu_der(x: ScalarArray) -> npt.NDArray[np.int_]:
-    return np.where(x < 0, 0, 1)
+    a = np.float32(0.0)
+    b = np.float32(0.0)
+    return ne.evaluate("where(x < 0, a, b)", casting="no")
 
 
-@nb.njit(nb.float64[:, :](nb.float64[:, :]))
+# @nb.njit(nb.float64[:, :](nb.float64[:, :]))
 def leaky_relu(x: ScalarArray) -> ScalarArray:
-    return np.where(x < 0, 0.01 * x, x)
+    a = np.float32(0.01)
+    return ne.evaluate("where(x < 0, a * x, x)", casting="no")
 
 
-@nb.njit(nb.float64[:, :](nb.float64[:, :]))
+# @nb.njit(nb.float64[:, :](nb.float64[:, :]))
 def leaky_relu_der(x: ScalarArray) -> ScalarArray:
-    return np.where(x < 0, 0.01, 1)
+    a = np.float32(0.01)
+    return ne.evaluate("where(x < 0, a, 1)", casting="no")
 
 
 def sigmoid(x: ScalarArray) -> npt.NDArray[np.float_]:

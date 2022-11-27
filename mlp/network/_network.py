@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 import numpy as np
 import numpy.typing as npt
+import scipy.linalg
 from tqdm import tqdm
 
 from mlp.metrics import accuracy_score
@@ -53,10 +54,14 @@ class ForwardFeedNN:
         # Glorot initialization for sigmoid, He initialization for relu
         init_const = {"leakyrelu": 2, "relu": 2, "sigmoid": 1, "softmax": 1}
         self.ws = [
-            np.random.normal(
-                0,
-                init_const[l_out._activation] / ((l_in.neurons + l_out.neurons) / 2),
-                (l_in.neurons, l_out.neurons),
+            np.copy(
+                np.random.normal(
+                    0,
+                    init_const[l_out._activation]
+                    / ((l_in.neurons + l_out.neurons) / 2),
+                    (l_in.neurons, l_out.neurons),
+                ).astype(np.float32),
+                order="F",
             )
             for l_in, l_out in zip(
                 self.layers[:-1],
@@ -64,12 +69,19 @@ class ForwardFeedNN:
                 strict=True,
             )
         ]
-        self.bs = [np.zeros((1, layer.neurons)) for layer in self.layers[1:]]
+        self.bs = [
+            np.zeros((1, layer.neurons), dtype=np.float32, order="F")
+            for layer in self.layers[1:]
+        ]
 
     def _get_splits(
         self, x: ScalarArray, y: IntegerArray, train_split: float
     ) -> tuple[ScalarArray, ScalarArray, IntegerArray, IntegerArray]:
         x_train, x_val, y_train, y_val = train_test_split(x, y, train_split=train_split)
+        x_train = np.copy(x_train.astype(np.float32), order="F")
+        x_val = np.copy(x_val.astype(np.float32), order="F")
+        y_train = np.copy(y_train.astype(np.int8), order="F")
+        y_val = np.copy(y_val.astype(np.int8), order="F")
         y_train = cast(IntegerArray, y_train)
         y_val = cast(IntegerArray, y_val)
         if self._multiclass:
@@ -94,7 +106,10 @@ class ForwardFeedNN:
             np.random.shuffle(indices)
             batch_size = self.minibatch_size if self.minibatch_size is not None else n
             mini_batches = [
-                (x_train[k : k + batch_size], y_train[k : k + batch_size])
+                (
+                    np.copy(x_train[k : k + batch_size], order="F"),
+                    np.copy(y_train[k : k + batch_size], order="F"),
+                )
                 for k in range(0, n, batch_size)
             ]
             self._batch_loss_history: list[float] = []
@@ -129,7 +144,7 @@ class ForwardFeedNN:
         zs: list[ScalarArray] = []
         acs: list[ScalarArray] = [x]
         for i, (w, b) in enumerate(zip(self.ws, self.bs)):
-            zs.append(acs[i] @ w + b)
+            zs.append(scipy.linalg.blas.sgemm(1, acs[i], w) + b)
             acs.append(self.layers[i + 1].activation(zs[i]))
         return zs, acs
 
@@ -144,14 +159,14 @@ class ForwardFeedNN:
         # TODO: Check that the  math is corerct
 
         # Initialize gradients to zero
-        w_grads = [np.zeros_like(w) for w in self.ws]
-        b_grads = [np.zeros_like(b) for b in self.bs]
+        w_grads = [np.zeros_like(w, dtype=np.float32, order="F") for w in self.ws]
+        b_grads = [np.zeros_like(b, dtype=np.float32, order="F") for b in self.bs]
 
         # Inspired by https://github.com/MichalDanielDobrzanski/DeepLearningPython/blob/2eae26e0bdcef314dcb18f13946a94320fb28a12/network2.py#L253 # noqa: E501, B950
         # Output layer
         # This holds for binary CE loss with sigmoid or categorical CE loss with softmax
         dL_dz = acs[-1] - y
-        dzo_dw = acs[-2].T @ dL_dz
+        dzo_dw = scipy.linalg.blas.sgemm(1, acs[-2].T, dL_dz)
         w_grads[-1] = dzo_dw
         b_grads[-1] = dL_dz.sum(axis=0).reshape(1, -1)
 
@@ -159,8 +174,8 @@ class ForwardFeedNN:
         for i in range(2, len(self.layers)):
             z = zs[-i]
             da_dz = self.layers[-i].activation_der(z)
-            dL_dz = (dL_dz @ self.ws[-i + 1].T) * da_dz
-            w_grads[-i] = acs[-i - 1].T @ dL_dz
+            dL_dz = scipy.linalg.blas.sgemm(1, dL_dz, self.ws[-i + 1].T) * da_dz
+            w_grads[-i] = scipy.linalg.blas.sgemm(1, acs[-i - 1].T, dL_dz)
             b_grads[-i] = dL_dz.sum(axis=0).reshape(1, -1)
 
         self.ws = [
@@ -172,7 +187,7 @@ class ForwardFeedNN:
 
     def predict_proba(self, a: ScalarArray) -> ScalarArray:
         for layer, w, b in zip(self.layers[1:], self.ws, self.bs, strict=True):
-            z = a @ w + b
+            z = scipy.linalg.blas.sgemm(1, a, w) + b
             a = layer.activation(z)
         return a
 
