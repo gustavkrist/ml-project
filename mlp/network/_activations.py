@@ -1,52 +1,52 @@
 from __future__ import annotations
 
 import warnings
+from typing import cast
 
-import numba as nb
+import numexpr as ne
 import numpy as np
-import numpy.typing as npt
 
+from mlp.types import Float32Array
+from mlp.types import FloatArray
 from mlp.types import ScalarArray
 
 
-@nb.njit(nb.float64[:, :](nb.float64[:, :]))
-def relu(x: ScalarArray) -> ScalarArray:
-    return np.maximum(x, 0)
+def relu(x: ScalarArray) -> FloatArray:
+    return cast(FloatArray, ne.evaluate("where(x > 0, x, 0)", casting="no"))
 
 
-@nb.njit(nb.int64[:, :](nb.float64[:, :]))
-def relu_der(x: ScalarArray) -> npt.NDArray[np.int_]:
-    return np.where(x < 0, 0, 1)
+def relu_der(x: ScalarArray) -> FloatArray:
+    a = np.float32(0.0)  # noqa: F841
+    b = np.float32(0.0)  # noqa: F841
+    return cast(Float32Array, ne.evaluate("where(x < 0, a, b)", casting="no"))
 
 
-@nb.njit(nb.float64[:, :](nb.float64[:, :]))
-def leaky_relu(x: ScalarArray) -> ScalarArray:
-    return np.where(x < 0, 0.01 * x, x)
+def leaky_relu(x: ScalarArray) -> FloatArray:
+    a = np.float32(0.01)  # noqa: F841
+    return cast(FloatArray, ne.evaluate("where(x < 0, a * x, x)", casting="no"))
 
 
-@nb.njit(nb.float64[:, :](nb.float64[:, :]))
-def leaky_relu_der(x: ScalarArray) -> ScalarArray:
-    return np.where(x < 0, 0.01, 1)
+def leaky_relu_der(x: ScalarArray) -> FloatArray:
+    a = np.float32(0.01)  # noqa: F841
+    return cast(FloatArray, ne.evaluate("where(x < 0, a, 1)", casting="no"))
 
 
-def sigmoid(x: ScalarArray) -> npt.NDArray[np.float_]:
+def sigmoid(x: ScalarArray) -> FloatArray:
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore", message="overflow encountered in exp", category=RuntimeWarning
         )
-        ret: npt.NDArray[np.float_] = 1 / (1 + np.exp(-x))
-    return ret
+        return cast(FloatArray, 1 / (1 + np.exp(-x)))
 
 
-def sigmoid_der(x: ScalarArray) -> npt.NDArray[np.float_]:
+def sigmoid_der(x: ScalarArray) -> FloatArray:
     return sigmoid(x) * (1 - sigmoid(x))
 
 
-def softmax(x: ScalarArray) -> npt.NDArray[np.float_]:
+def softmax(x: ScalarArray) -> FloatArray:
     # https://github.com/scipy/scipy/blob/v1.9.3/scipy/special/_logsumexp.py#L221
     x_max = np.amax(x, axis=1, keepdims=True)
     exp_x_shifted = np.exp(x - x_max)
-    ret: npt.NDArray[np.float_] = exp_x_shifted / np.sum(
-        exp_x_shifted, axis=1, keepdims=True
+    return cast(
+        FloatArray, exp_x_shifted / np.sum(exp_x_shifted, axis=1, keepdims=True)
     )
-    return ret

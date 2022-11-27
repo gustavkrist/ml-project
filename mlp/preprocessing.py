@@ -4,28 +4,26 @@ import math
 from collections.abc import Sequence
 from itertools import chain
 from itertools import groupby
-from typing import Any
 from typing import cast
 
 import numpy as np
-import numpy.typing as npt
 
+from mlp.types import IntArray
 from mlp.types import ScalarArray
+from mlp.types import UInt8Array
 
 
-def one_hot(
-    y: npt.NDArray[np.integer[Any]], categories: Sequence[int] | None = None
-) -> npt.NDArray[np.int_]:
+def one_hot(y: IntArray, categories: Sequence[int] | None = None) -> UInt8Array:
     label: np.int_ | int = 0
     if categories is not None:
         label = cast(int, label)
-        y_one_hot = np.zeros((y.shape[0], len(categories)), dtype=np.int_)
+        y_one_hot = np.zeros((y.shape[0], len(categories)), dtype=np.uint8, order="F")
         for i, label in enumerate(categories):
             y_one_hot[np.where(y == label), i] = 1
     else:
         label = cast(np.int_, label)
         unique = np.unique(y)
-        y_one_hot = np.zeros((y.shape[0], unique.shape[0]), dtype=np.int_)
+        y_one_hot = np.zeros((y.shape[0], unique.shape[0]), dtype=np.uint8, order="F")
         for i, label in enumerate(unique):
             y_one_hot[np.where(y == label), i] = 1
     return y_one_hot

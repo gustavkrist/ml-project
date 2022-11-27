@@ -5,21 +5,21 @@ import numpy as np
 
 from mlp.metrics import gini_score
 from mlp.metrics import weighted_gini
-from mlp.types import IntegerArray
-from mlp.types import ScalarArray
+from mlp.types import Float32Array
+from mlp.types import UInt8Array
 
 
 @nb.njit(
-    nb.types.Tuple((nb.int64, nb.float64, nb.float64, nb.float64, nb.float64))(
-        nb.float64[:, :], nb.int64[:]
+    nb.types.Tuple((nb.int64, nb.float32, nb.float32, nb.float32, nb.float32))(
+        nb.float32[:, :], nb.uint8[:]
     ),
     parallel=True,
     nogil=True,
     boundscheck=False,
 )
 def find_best_split(
-    x: ScalarArray, y: IntegerArray
-) -> tuple[np.int_, np.float_, np.float_, np.float_, np.float_]:
+    x: Float32Array, y: UInt8Array
+) -> tuple[np.int_, np.float32, np.float32, np.float32, np.float32]:
     splits = np.full((x.shape[1], 4), -1.0, dtype=np.float_)
     for split_feature in nb.prange(x.shape[1]):
         feature_vals = np.unique(x[:, split_feature])
@@ -48,7 +48,13 @@ def find_best_split(
             continue
         splits[split_feature] = imps_at_feat[np.argmax(imps_at_feat[:, 1])]
     if not np.any(splits >= 0):
-        return np.int_(-1), np.float_(-1), np.float_(-1), np.float_(-1), np.float_(-1)
+        return (
+            np.int_(-1),
+            np.float32(-1),
+            np.float32(-1),
+            np.float32(-1),
+            np.float32(-1),
+        )
     best_split_feature = np.argmax(splits[:, 1])
     best_split_val, best_split_imp, imp_left, imp_right = splits[best_split_feature]
     return best_split_feature, best_split_val, best_split_imp, imp_left, imp_right

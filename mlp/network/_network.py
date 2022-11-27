@@ -7,7 +7,6 @@ if TYPE_CHECKING:
     from typing import TypeAlias
 
 import numpy as np
-import numpy.typing as npt
 from tqdm import tqdm
 
 from mlp.metrics import accuracy_score
@@ -18,8 +17,11 @@ from mlp.network._layers import InputLayer
 from mlp.network._layers import OutputLayer
 from mlp.preprocessing import one_hot
 from mlp.preprocessing import train_test_split
-from mlp.types import IntegerArray
+from mlp.types import Float32Array
+from mlp.types import FloatArray
+from mlp.types import IntArray
 from mlp.types import ScalarArray
+from mlp.types import UInt8Array
 
 Layer: TypeAlias = InputLayer | DenseLayer | OutputLayer
 
@@ -53,10 +55,14 @@ class ForwardFeedNN:
         # Glorot initialization for sigmoid, He initialization for relu
         init_const = {"leakyrelu": 2, "relu": 2, "sigmoid": 1, "softmax": 1}
         self.ws = [
-            np.random.normal(
-                0,
-                init_const[l_out._activation] / ((l_in.neurons + l_out.neurons) / 2),
-                (l_in.neurons, l_out.neurons),
+            np.copy(
+                np.random.normal(
+                    0,
+                    init_const[l_out._activation]
+                    / ((l_in.neurons + l_out.neurons) / 2),
+                    (l_in.neurons, l_out.neurons),
+                ).astype(np.float32),
+                order="F",
             )
             for l_in, l_out in zip(
                 self.layers[:-1],
@@ -64,20 +70,25 @@ class ForwardFeedNN:
                 strict=True,
             )
         ]
-        self.bs = [np.zeros((1, layer.neurons)) for layer in self.layers[1:]]
+        self.bs = [
+            np.zeros((1, layer.neurons), dtype=np.float32, order="F")
+            for layer in self.layers[1:]
+        ]
 
     def _get_splits(
-        self, x: ScalarArray, y: IntegerArray, train_split: float
-    ) -> tuple[ScalarArray, ScalarArray, IntegerArray, IntegerArray]:
+        self, x: ScalarArray, y: ScalarArray, train_split: float
+    ) -> tuple[Float32Array, Float32Array, UInt8Array, UInt8Array]:
         x_train, x_val, y_train, y_val = train_test_split(x, y, train_split=train_split)
-        y_train = cast(IntegerArray, y_train)
-        y_val = cast(IntegerArray, y_val)
+        x_train = np.copy(x_train.astype(np.float32), order="F")
+        x_val = np.copy(x_val.astype(np.float32), order="F")
+        y_train = np.copy(y_train.astype(np.uint8), order="F")
+        y_val = np.copy(y_val.astype(np.uint8), order="F")
         if self._multiclass:
             y_train = one_hot(y_train)
             y_val = one_hot(y_val)
         return x_train, x_val, y_train, y_val
 
-    def fit(self, X: ScalarArray, Y: IntegerArray, train_split: float = 0.7) -> None:
+    def fit(self, X: ScalarArray, Y: ScalarArray, train_split: float = 0.7) -> None:
         self.loss_history = []
         accuracy_max = 0.0
         n_since_acc_max = 0
@@ -93,11 +104,14 @@ class ForwardFeedNN:
         ):
             np.random.shuffle(indices)
             batch_size = self.minibatch_size if self.minibatch_size is not None else n
-            mini_batches = [
-                (x_train[k : k + batch_size], y_train[k : k + batch_size])
+            mini_batches: list[tuple[Float32Array, UInt8Array]] = [
+                (
+                    np.copy(x_train[k : k + batch_size], order="F"),
+                    np.copy(y_train[k : k + batch_size], order="F"),
+                )
                 for k in range(0, n, batch_size)
             ]
-            self._batch_loss_history: list[float] = []
+            self._batch_loss_history: list[np.float_] = []
             for x, y in mini_batches:
                 self._process_batch(x, y)
             loss = np.mean(self._batch_loss_history)
@@ -112,11 +126,11 @@ class ForwardFeedNN:
                 return
             desc = (
                 f"epoch: {i+1} - Loss: {loss:.3f} - Acc: {accuracy:.2%} - "
-                f"Best acc: {accuracy_max:.2%} - Epochs since best: {n_since_acc_max}"
+                + f"Best acc: {accuracy_max:.2%} - Epochs since best: {n_since_acc_max}"
             )
             pbar.set_description_str(desc)
 
-    def _process_batch(self, x: ScalarArray, y: IntegerArray) -> None:
+    def _process_batch(self, x: Float32Array, y: UInt8Array) -> None:
         zs, acs = self._forward(x)
         if self._multiclass:
             batch_loss = ccel(acs[-1], y)
@@ -125,33 +139,35 @@ class ForwardFeedNN:
         self._batch_loss_history.append(batch_loss)
         self._backpropagate(x, y, zs, acs)
 
-    def _forward(self, x: ScalarArray) -> tuple[list[ScalarArray], list[ScalarArray]]:
-        zs: list[ScalarArray] = []
-        acs: list[ScalarArray] = [x]
+    def _forward(
+        self, x: Float32Array
+    ) -> tuple[list[Float32Array], list[Float32Array]]:
+        zs: list[Float32Array] = []
+        acs: list[Float32Array] = [x]
         for i, (w, b) in enumerate(zip(self.ws, self.bs)):
-            zs.append(acs[i] @ w + b)
+            zs.append(np.matmul(acs[i], w, order="F") + b)
             acs.append(self.layers[i + 1].activation(zs[i]))
         return zs, acs
 
     def _backpropagate(
         self,
-        x: ScalarArray,
-        y: IntegerArray,
-        zs: list[ScalarArray],
-        acs: list[ScalarArray],
+        x: Float32Array,
+        y: UInt8Array,
+        zs: list[Float32Array],
+        acs: list[Float32Array],
     ) -> None:
 
         # TODO: Check that the  math is corerct
 
         # Initialize gradients to zero
-        w_grads = [np.zeros_like(w) for w in self.ws]
-        b_grads = [np.zeros_like(b) for b in self.bs]
+        w_grads = [np.zeros_like(w, dtype=np.float32, order="F") for w in self.ws]
+        b_grads = [np.zeros_like(b, dtype=np.float32, order="F") for b in self.bs]
 
         # Inspired by https://github.com/MichalDanielDobrzanski/DeepLearningPython/blob/2eae26e0bdcef314dcb18f13946a94320fb28a12/network2.py#L253 # noqa: E501, B950
         # Output layer
         # This holds for binary CE loss with sigmoid or categorical CE loss with softmax
         dL_dz = acs[-1] - y
-        dzo_dw = acs[-2].T @ dL_dz
+        dzo_dw = np.matmul(acs[-2].T, dL_dz, order="F")
         w_grads[-1] = dzo_dw
         b_grads[-1] = dL_dz.sum(axis=0).reshape(1, -1)
 
@@ -159,8 +175,8 @@ class ForwardFeedNN:
         for i in range(2, len(self.layers)):
             z = zs[-i]
             da_dz = self.layers[-i].activation_der(z)
-            dL_dz = (dL_dz @ self.ws[-i + 1].T) * da_dz
-            w_grads[-i] = acs[-i - 1].T @ dL_dz
+            dL_dz = np.matmul(dL_dz, self.ws[-i + 1].T, order="F") * da_dz
+            w_grads[-i] = np.matmul(acs[-i - 1].T, dL_dz, order="F")
             b_grads[-i] = dL_dz.sum(axis=0).reshape(1, -1)
 
         self.ws = [
@@ -170,15 +186,14 @@ class ForwardFeedNN:
             b - self.alpha / x.shape[0] * b_grad for b, b_grad in zip(self.bs, b_grads)
         ]
 
-    def predict_proba(self, a: ScalarArray) -> ScalarArray:
+    def predict_proba(self, a: ScalarArray) -> FloatArray:
         for layer, w, b in zip(self.layers[1:], self.ws, self.bs, strict=True):
-            z = a @ w + b
+            z = np.matmul(a, w, order="F") + b
             a = layer.activation(z)
-        return a
+        return cast(FloatArray, a)
 
-    def predict(self, x: ScalarArray) -> npt.NDArray[np.int_]:
-        preds: npt.NDArray[np.int_] = np.argmax(self.predict_proba(x), axis=1)
-        return preds
+    def predict(self, x: ScalarArray) -> IntArray:
+        return cast(IntArray, np.argmax(self.predict_proba(x), axis=1))
 
     def plot_loss(self) -> None:
         import matplotlib.pyplot as plt
