@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from itertools import chain, groupby
-from typing import Any, cast
+from itertools import chain
+from itertools import groupby
+from typing import Any
+from typing import cast
 
 import numpy as np
 import numpy.typing as npt

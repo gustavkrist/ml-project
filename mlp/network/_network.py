@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
+from typing import cast
 
 if TYPE_CHECKING:
     from typing import TypeAlias
@@ -9,10 +10,16 @@ import numpy as np
 import numpy.typing as npt
 from tqdm import tqdm
 
-from mlp.metrics import accuracy_score, bcel, ccel
-from mlp.network._layers import DenseLayer, InputLayer, OutputLayer
-from mlp.preprocessing import one_hot, train_test_split
-from mlp.types import IntegerArray, ScalarArray
+from mlp.metrics import accuracy_score
+from mlp.metrics import bcel
+from mlp.metrics import ccel
+from mlp.network._layers import DenseLayer
+from mlp.network._layers import InputLayer
+from mlp.network._layers import OutputLayer
+from mlp.preprocessing import one_hot
+from mlp.preprocessing import train_test_split
+from mlp.types import IntegerArray
+from mlp.types import ScalarArray
 
 Layer: TypeAlias = InputLayer | DenseLayer | OutputLayer
 

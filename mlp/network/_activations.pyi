@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar, overload
+from typing import Any
+from typing import TypeVar
+from typing import overload
 
 import numpy as np
 import numpy.typing as npt

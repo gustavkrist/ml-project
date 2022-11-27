@@ -6,7 +6,8 @@ import numba as nb
 import numpy as np
 import numpy.typing as npt
 
-from mlp.types import IntegerArray, ScalarArray
+from mlp.types import IntegerArray
+from mlp.types import ScalarArray
 
 
 @nb.njit(nb.float64(nb.int64[:]))

@@ -4,7 +4,8 @@ import numpy as np
 
 from mlp.metrics import gini_score
 from mlp.tree._split import find_best_split
-from mlp.types import IntegerArray, ScalarArray
+from mlp.types import IntegerArray
+from mlp.types import ScalarArray
 
 
 class DecisionTreeClassifier:
@@ -24,8 +25,7 @@ class DecisionTreeClassifier:
         self.root.split(x, y)
 
     def predict(self, x: ScalarArray) -> IntegerArray:
-        preds: IntegerArray = np.apply_along_axis(self.root.predict, 1, x)
-        return preds
+        return np.apply_along_axis(self.root.predict, 1, x)
 
 
 class Node:
@@ -43,8 +43,6 @@ class Node:
         self.left: Node | None = None
         self.right: Node | None = None
         self.label: int | None = None
-        # Splitting here instead of storing self.x and self.y to allow the dataset
-        # to be garbage collected
 
     def split(self, x: ScalarArray, y: ScalarArray) -> None:
         if not self.can_split(y):
@@ -87,13 +85,11 @@ class Node:
 
     def can_split(self, y: ScalarArray) -> bool:
         # Cannot split if pure (only one label in ys) or max depth reached
-        if (
+        return (
             len(np.unique(y)) == 1
             or (self.tree.max_depth is not None and self.depth >= self.tree.max_depth)
             or len(y) < self.tree.min_samples
-        ):
-            return False
-        return True
+        )
 
     @property
     def is_leaf(self) -> bool:

@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
+from typing import Callable
 
-from mlp.network._activations import (
-    leaky_relu,
-    leaky_relu_der,
-    relu,
-    relu_der,
-    sigmoid,
-    sigmoid_der,
-    softmax,
-)
+from mlp.network._activations import leaky_relu
+from mlp.network._activations import leaky_relu_der
+from mlp.network._activations import relu
+from mlp.network._activations import relu_der
+from mlp.network._activations import sigmoid
+from mlp.network._activations import sigmoid_der
+from mlp.network._activations import softmax
 
 
 class BaseLayer:

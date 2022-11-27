@@ -3,8 +3,10 @@ from __future__ import annotations
 import numba as nb
 import numpy as np
 
-from mlp.metrics import gini_score, weighted_gini
-from mlp.types import IntegerArray, ScalarArray
+from mlp.metrics import gini_score
+from mlp.metrics import weighted_gini
+from mlp.types import IntegerArray
+from mlp.types import ScalarArray
 
 
 @nb.njit(
