@@ -4,8 +4,10 @@ import numpy as np
 
 from mlp.metrics import gini_score
 from mlp.tree._split import find_best_split
-from mlp.types import IntegerArray
+from mlp.types import Float32Array
+from mlp.types import IntArray
 from mlp.types import ScalarArray
+from mlp.types import UInt8Array
 
 
 class DecisionTreeClassifier:
@@ -19,12 +21,14 @@ class DecisionTreeClassifier:
         self.early_stopping = early_stopping
         self.min_samples = min_samples
 
-    def fit(self, x: ScalarArray, y: IntegerArray) -> None:
-        impurity = gini_score(y)
+    def fit(self, x: ScalarArray, y: ScalarArray) -> None:
+        x_train = x.astype(np.float32)
+        y_train = y.astype(np.uint8)
+        impurity = gini_score(y_train)
         self.root = Node(0, self, impurity)
-        self.root.split(x, y)
+        self.root.split(x_train, y_train)
 
-    def predict(self, x: ScalarArray) -> IntegerArray:
+    def predict(self, x: ScalarArray) -> IntArray:
         return np.apply_along_axis(self.root.predict, 1, x)
 
 
@@ -33,7 +37,7 @@ class Node:
         self,
         depth: int,
         tree: DecisionTreeClassifier,
-        impurity: np.float_,
+        impurity: np.float32,
     ) -> None:
         self.depth = depth
         self.tree = tree
@@ -44,7 +48,7 @@ class Node:
         self.right: Node | None = None
         self.label: int | None = None
 
-    def split(self, x: ScalarArray, y: ScalarArray) -> None:
+    def split(self, x: Float32Array, y: UInt8Array) -> None:
         if not self.can_split(y):
             self.label = int(np.bincount(y).argmax())
             return
@@ -85,7 +89,7 @@ class Node:
 
     def can_split(self, y: ScalarArray) -> bool:
         # Cannot split if pure (only one label in ys) or max depth reached
-        return (
+        return not (
             len(np.unique(y)) == 1
             or (self.tree.max_depth is not None and self.depth >= self.tree.max_depth)
             or len(y) < self.tree.min_samples
