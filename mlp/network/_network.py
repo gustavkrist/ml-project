@@ -192,7 +192,7 @@ class ForwardFeedNN:
         return cast(FloatArray, a)
 
     def predict(self, x: ScalarArray) -> IntArray:
-        return cast(IntArray, np.argmax(self.predict_proba(x), axis=1))
+        return np.argmax(self.predict_proba(x), axis=1)
 
     def plot_loss(self) -> None:
         import matplotlib.pyplot as plt

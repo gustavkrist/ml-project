@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import cast
-
 import numba as nb
 import numpy as np
 
@@ -23,10 +21,7 @@ def weighted_gini_array(y_left: UInt8Array, y_right: UInt8Array) -> np.float32:
     n_l = len(y_left)
     n_r = len(y_right)
     n_t = n_l + n_r
-    return cast(
-        np.float32,
-        weighted_gini(n_t, n_l, n_r, gini_score(y_left), gini_score(y_right)),
-    )
+    return weighted_gini(n_t, n_l, n_r, gini_score(y_left), gini_score(y_right))
 
 
 @nb.njit(nb.float32(nb.int64, nb.int64, nb.int64, nb.float32, nb.float32))
@@ -47,12 +42,9 @@ def accuracy_score(y_true: IntArray, y_pred: IntArray) -> float:
 def ccel(s: FloatArray, y: IntArray) -> np.float_:
     """Categorical Cross-Entropy Loss"""
     # NOTE: Adding the small 1e-20 here to prevent division by zero in the log function
-    return cast(np.float_, -(np.log(s[np.where(y)] + 1e-20)).sum() / y.shape[1])
+    return -(np.log(s[np.where(y)] + 1e-20)).sum() / y.shape[1]
 
 
 def bcel(yhat: FloatArray, y: IntArray) -> np.float_:
     """Binary Cross-Entropy Loss"""
-    return cast(
-        np.float_,
-        -1 / len(y) * ((y @ np.log(yhat)) + ((1 - y) @ np.log(1 - yhat))).sum(),
-    )
+    return -1 / len(y) * ((y @ np.log(yhat)) + ((1 - y) @ np.log(1 - yhat))).sum()
