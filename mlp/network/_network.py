@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import Any
 from typing import cast
 
 if TYPE_CHECKING:
@@ -27,6 +28,7 @@ Layer: TypeAlias = InputLayer | DenseLayer | OutputLayer
 
 
 class ForwardFeedNN:
+    # pylint: disable=C0103
     def __init__(
         self,
         *layers: Layer,
@@ -52,6 +54,8 @@ class ForwardFeedNN:
         self._multiclass = self.layers[-1]._multiclass
         self.minibatch_size = minibatch_size
         self.early_stopping = early_stopping
+        self.loss_history: list[np.floating[Any]] = []
+        self._batch_loss_history: list[np.float_] = []
         # Glorot initialization for sigmoid, He initialization for relu
         init_const = {"leakyrelu": 2, "relu": 2, "sigmoid": 1, "softmax": 1}
         self.ws = [
@@ -88,7 +92,6 @@ class ForwardFeedNN:
         return x_train, x_val, y_train, y_val
 
     def fit(self, X: ScalarArray, Y: ScalarArray, train_split: float = 0.7) -> None:
-        self.loss_history = []
         accuracy_max = 0.0
         n_since_acc_max = 0
         x_train, x_val, y_train, y_val = self._get_splits(X, Y, train_split)
@@ -110,7 +113,7 @@ class ForwardFeedNN:
                 )
                 for k in range(0, n, batch_size)
             ]
-            self._batch_loss_history: list[np.float_] = []
+            self._batch_loss_history = []
             for x, y in mini_batches:
                 self._process_batch(x, y)
             loss = np.mean(self._batch_loss_history)

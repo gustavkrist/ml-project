@@ -13,7 +13,7 @@ dependencies = ['numpy', 'tqdm', 'numba']
 packages = ['mlp']
 
 [project.optional-dependencies]
-dev = ['flake8', 'black', 'mypy', 'pip-tools', 'types-tqdm']
+dev = ['flake8', 'black', 'mypy', 'pip-tools', 'types-tqdm', 'pylint']
 
 [tool.isort]
 profile = 'black'

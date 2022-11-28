@@ -21,7 +21,7 @@ def find_best_split(
     x: Float32Array, y: UInt8Array
 ) -> tuple[np.int_, np.float32, np.float32, np.float32, np.float32]:
     splits = np.full((x.shape[1], 4), -1.0, dtype=np.float_)
-    for split_feature in nb.prange(x.shape[1]):
+    for split_feature in nb.prange(x.shape[1]):  # pylint: disable=E1133
         feature_vals = np.unique(x[:, split_feature])
         if len(feature_vals) < 2:
             continue

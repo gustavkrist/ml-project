@@ -20,6 +20,7 @@ class DecisionTreeClassifier:
         self.max_depth = max_depth
         self.early_stopping = early_stopping
         self.min_samples = min_samples
+        self.root: Node
 
     def fit(self, x: ScalarArray, y: ScalarArray) -> None:
         x_train = x.astype(np.float32)
