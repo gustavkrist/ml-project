@@ -150,3 +150,6 @@ data/
 environment.yaml
 
 _null-ls*
+
+out/
+figures/

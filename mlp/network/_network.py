@@ -127,7 +127,7 @@ class ForwardFeedNN:
             if self.early_stopping > 0 and n_since_acc_max == self.early_stopping:
                 return
             desc = (
-                f"epoch: {i+1} - Loss: {loss:.3f} - Acc: {accuracy:.2%} - "
+                f"Epoch: {i+1} - Loss: {loss:.3f} - Acc: {accuracy:.2%} - "
                 + f"Best acc: {accuracy_max:.2%} - Epochs since best: {n_since_acc_max}"
             )
             pbar.set_description_str(desc)

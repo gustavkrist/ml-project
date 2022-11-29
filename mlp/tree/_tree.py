@@ -55,7 +55,7 @@ class Node:
             return
         best_split_result = find_best_split(x, y)
         # No splits were found, set label
-        if best_split_result[0] == -1:
+        if best_split_result[1] == -1:
             self.label = int(np.bincount(y).argmax())
             return
         split_feature, split_value, imp_split, imp_left, imp_right = best_split_result

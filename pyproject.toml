@@ -20,8 +20,9 @@ profile = 'black'
 force_single_line = 'true'
 
 [tool.mypy]
-mypy_path = '$MYPY_CONFIG_FILE_DIR'
+mypy_path = '$MYPY_CONFIG_PATH/mlp'
 plugins = ["numpy.typing.mypy_plugin"]
+exclude = 'report/.*'
 check_untyped_defs = true
 disallow_any_generics = true
 disallow_any_unimported = true
