@@ -99,18 +99,33 @@ def main():
                 (128, "leakyrelu"),
                 5,
             ),
+            (
+                784,
+                (784 * 2, "leakyrelu"),
+                (784, "leakyrelu"),
+                (128, "leakyrelu"),
+                5,
+            ),
+            (
+                784,
+                (784 * 2, "leakyrelu"),
+                (784, "leakyrelu"),
+                (128, "leakyrelu"),
+                5,
+            ),
         ),
-        "alpha": [4e-4, 8e-4, 4e-3] + [4e-2] * 3,
-        "epochs": [1500, 1000, 750] + [500] * 3,
-        "minibatch_size": [100] * 6,
-        "early_stopping": [100] * 4 + [50] * 2,
+        "alpha": [4e-4, 8e-4, 4e-3] + [4e-2] * 5,
+        "epochs": [1500, 1000, 750] + [500] * 5,
+        "minibatch_size": [100] * 8,
+        "early_stopping": [100] * 4 + [50] * 2 + [20] + [10],
+        "min_epochs": [0] * 6 + [50] * 2,
     }
     parameter_list = [{} for _ in range(len(parameter_combs["epochs"]))]
     for param, param_val in parameter_combs.items():
         for i, v in enumerate(param_val):
             parameter_list[i][param] = v
     results = list(map(grid_search, parameter_list))
-    with open("results.json", "w") as f:
+    with open("results_ffnn_.json", "w") as f:
         json.dump(results, f)
 
 

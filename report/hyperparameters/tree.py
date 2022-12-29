@@ -41,7 +41,7 @@ def main():
         for i, v in enumerate(param_val):
             parameter_list[i][param] = v
     results = list(map(grid_search, tqdm(parameter_list)))
-    with open("results.json", "w") as f:
+    with open("results_tree.json", "w") as f:
         json.dump(results, f)
 
 

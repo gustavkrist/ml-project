@@ -36,6 +36,7 @@ class ForwardFeedNN:
         epochs: int = 1000,
         minibatch_size: int | None = None,
         early_stopping: int = 0,
+        min_epochs: int = 0,
     ) -> None:
         self.layers = layers
         if len(layers) < 2:
@@ -50,6 +51,7 @@ class ForwardFeedNN:
             raise ValueError("All hidden layer must be of type DenseLayer")
         self.alpha = alpha
         self.epochs = epochs
+        self.min_epochs = max(min_epochs, early_stopping)
         assert isinstance(self.layers[-1], OutputLayer)
         self._multiclass = self.layers[-1]._multiclass
         self.minibatch_size = minibatch_size
@@ -124,7 +126,7 @@ class ForwardFeedNN:
             else:
                 accuracy_max = accuracy
                 n_since_acc_max = 0
-            if self.early_stopping > 0 and n_since_acc_max == self.early_stopping:
+            if self.early_stopping > 0 and i >= self.min_epochs and n_since_acc_max == self.early_stopping:
                 return
             desc = (
                 f"Epoch: {i+1} - Loss: {loss:.3f} - Acc: {accuracy:.2%} - "
