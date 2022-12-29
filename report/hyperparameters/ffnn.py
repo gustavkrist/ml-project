@@ -110,7 +110,7 @@ def main():
         for i, v in enumerate(param_val):
             parameter_list[i][param] = v
     results = list(map(grid_search, parameter_list))
-    with open("results.json", "wb") as f:
+    with open("results.json", "w") as f:
         json.dump(results, f)
 
 

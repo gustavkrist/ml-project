@@ -7,7 +7,7 @@ name = 'mlp'
 description = 'Machine Learning Project Library'
 version = '0.1.0'
 requires-python = '>=3.9'
-dependencies = ['numpy', 'tqdm', 'numba']
+dependencies = ['numpy', 'tqdm', 'numba', 'numexpr']
 
 [tool.setuptools]
 packages = ['mlp']
