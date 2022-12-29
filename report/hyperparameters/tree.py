@@ -8,6 +8,7 @@ import time
 import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import StratifiedShuffleSplit
+from tqdm import tqdm
 
 from mlp.tree import DecisionTreeClassifier
 
@@ -35,13 +36,13 @@ def main():
         "early_stopping": [False, False, False, False, True, True, True],
         "min_samples": [2, 10, 20, 2, 2, 2, 2],
     }
-    parameter_list = [{} for _ in range(len(parameter_combs["epochs"]))]
+    parameter_list = [{} for _ in range(len(parameter_combs["max_depth"]))]
     for param, param_val in parameter_combs.items():
         for i, v in enumerate(param_val):
             parameter_list[i][param] = v
-    results = list(map(grid_search, parameter_list))
+    results = list(map(grid_search, tqdm(parameter_list)))
     with open("results.json", "wb") as f:
-        json.dump(f, results)
+        json.dump(results, f)
 
 
 if __name__ == "__main__":

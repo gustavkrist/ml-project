@@ -42,7 +42,7 @@ def grid_search(params):
             layers.append(OutputLayer(layer))
         else:
             layers.append(DenseLayer(*layer))
-    sss = StratifiedShuffleSplit(n_splits=5, test_size=0.4)
+    sss = StratifiedShuffleSplit(n_splits=4, test_size=0.4)
     accuracy_scores = []
     auc_scores = []
     training_times = []
@@ -103,7 +103,7 @@ def main():
         "alpha": [4e-4, 8e-4, 4e-3] + [4e-2] * 3,
         "epochs": [1500, 1000, 750] + [500] * 3,
         "minibatch_size": [100] * 6,
-        "early_stopping": [100] * 3 + [50] * 3,
+        "early_stopping": [100] * 4 + [50] * 2,
     }
     parameter_list = [{} for _ in range(len(parameter_combs["epochs"]))]
     for param, param_val in parameter_combs.items():
@@ -111,7 +111,7 @@ def main():
             parameter_list[i][param] = v
     results = list(map(grid_search, parameter_list))
     with open("results.json", "wb") as f:
-        json.dump(f, results)
+        json.dump(results, f)
 
 
 if __name__ == "__main__":
