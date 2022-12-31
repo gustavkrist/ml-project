@@ -81,9 +81,9 @@ class ForwardFeedNN:
         ]
 
     def _get_splits(
-        self, x: ScalarArray, y: ScalarArray, train_split: float
+        self, x: ScalarArray, y: ScalarArray, train_size: float
     ) -> tuple[Float32Array, Float32Array, UInt8Array, UInt8Array]:
-        x_train, x_val, y_train, y_val = train_test_split(x, y, train_split=train_split)
+        x_train, x_val, y_train, y_val = train_test_split(x, y, train_size=train_size, seed=1)
         x_train = np.copy(x_train.astype(np.float32))
         x_val = np.copy(x_val.astype(np.float32))
         y_train = np.copy(y_train.astype(np.uint8))
@@ -93,10 +93,10 @@ class ForwardFeedNN:
             y_val = one_hot(y_val)
         return x_train, x_val, y_train, y_val
 
-    def fit(self, X: ScalarArray, Y: ScalarArray, train_split: float = 0.7) -> None:
+    def fit(self, X: ScalarArray, Y: ScalarArray, train_size: float = 0.7) -> None:
         accuracy_max = 0.0
         n_since_acc_max = 0
-        x_train, x_val, y_train, y_val = self._get_splits(X, Y, train_split)
+        x_train, x_val, y_train, y_val = self._get_splits(X, Y, train_size)
         n = x_train.shape[0]
         indices = np.arange(n)
         for i in (
@@ -160,8 +160,6 @@ class ForwardFeedNN:
         zs: list[Float32Array],
         acs: list[Float32Array],
     ) -> None:
-
-        # TODO: Check that the  math is corerct
 
         # Initialize gradients to zero
         w_grads = [np.zeros_like(w, dtype=np.float32) for w in self.ws]

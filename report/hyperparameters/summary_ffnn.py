@@ -3,7 +3,7 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 
-with open("results_ffnn.json", "r") as f:
+with open("results_ffnn_.json", "r") as f:
     results = json.load(f)
 
 for i, result in enumerate(results):

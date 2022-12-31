@@ -17,7 +17,7 @@ def grid_search(params):
     data = np.load(f"{os.path.dirname(__file__)}/../../data/fashion_train.npy")
     x = data[:, :784].astype(np.float_) / 255
     y = data[:, 784].astype(np.int_)
-    sss = StratifiedShuffleSplit(n_splits=5, test_size=0.4)
+    sss = StratifiedShuffleSplit(n_splits=5, test_size=0.4, random_state=1)
     accuracy_scores = []
     training_times = []
     for train_idx, val_idx in sss.split(x, y):

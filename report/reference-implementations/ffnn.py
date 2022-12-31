@@ -5,10 +5,11 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 from tqdm import tqdm
@@ -17,6 +18,7 @@ from mlp.network import DenseLayer
 from mlp.network import ForwardFeedNN
 from mlp.network import InputLayer
 from mlp.network import OutputLayer
+from mlp.preprocessing import train_test_split
 
 
 class Data(Dataset):
@@ -55,23 +57,26 @@ class FFNN(nn.Module):
     def predict(self, x):
         return torch.argmax(self.forward(x), dim=1)
 
+    def predict_proba(self, x):
+        return self.forward(x)
+
 
 def get_trained_pytorch_model(data):
-    data_train, data_val = train_test_split(data, train_size=0.7)
+    data_train, data_val = train_test_split(data, train_size=0.7, seed=1)
     train = Data(data_train)
     val = Data(data_val)
-    minibatch_train = DataLoader(train, batch_size=100, shuffle=True)
+    minibatch_train = DataLoader(train, batch_size=32, shuffle=True)
     batch_val = DataLoader(val, batch_size=len(val))
 
     clf = FFNN()
 
     loss_func = nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(clf.parameters(), lr=4e-2)
+    optimizer = torch.optim.SGD(clf.parameters(), lr=2e-2)
 
     loss_history = []
     best_acc = 0
     n_since_best = 0
-    epochs = 1000
+    epochs = 300
     for epoch in (
         pbar := tqdm(
             range(epochs),
@@ -80,7 +85,7 @@ def get_trained_pytorch_model(data):
         )
     ):
         epoch_loss = 0.0
-        for batch in minibatch_train:
+        for i, batch in enumerate(minibatch_train, start=1):  # noqa: B007
             x_batch, y_batch = batch
             prob = clf(x_batch)
             optimizer.zero_grad()
@@ -91,16 +96,16 @@ def get_trained_pytorch_model(data):
         x_val, y_val = next(iter(batch_val))
         preds = clf.predict(x_val)
         acc = accuracy_score(y_val, preds)
-        loss_history.append(torch.mean(epoch_loss))
+        loss_history.append(epoch_loss / i)
         if acc > best_acc:
             best_acc = acc
             n_since_best = 0
         else:
             n_since_best += 1
-        if n_since_best >= 50:
+        if n_since_best >= 20 and epoch >= 50:
             break
         desc = (
-            f"Epoch: {epoch+1} - Loss: {torch.mean(epoch_loss):.3f} - Acc: {acc:.2%} - "
+            f"Epoch: {epoch+1} - Loss: {epoch_loss / i:.3f} - Acc: {acc:.2%} - "
             + f"Best acc: {best_acc:.2%} - Epochs since best: {n_since_best}"
         )
         pbar.set_description_str(desc)
@@ -120,10 +125,11 @@ def get_own_trained_model(data):
     )
     ann = ForwardFeedNN(
         *layers,
-        alpha=4e-2,
-        epochs=1000,
-        minibatch_size=100,
-        early_stopping=50,
+        alpha=2e-2,
+        epochs=300,
+        minibatch_size=32,
+        early_stopping=20,
+        min_epochs=50,
     )
     ann.fit(x, y)
     return ann
@@ -142,19 +148,31 @@ def plot_loss(loss_history, clf_name):
     plt.savefig(f"{figpath}/{filename}", dpi=400, bbox_inches="tight")
 
 
+def calc_stats(model, x_test, y_test):
+    results = [accuracy_score(y_test, model.predict(x_test))]
+    pred_proba = model.predict_proba(x_test)
+    if isinstance(model, nn.Module):
+        pred_proba = pred_proba.detach()
+    results.append(roc_auc_score(y_test, pred_proba, multi_class="ovo"))
+    return pd.DataFrame({"Metric": ["Accuracy", "ROC AUC Score"], "Result": results})
+
+
 def main():
-    data = np.load(f"{os.path.dirname(__file__)}/../../data/fashion_train.npy")
-    data_train, data_val = train_test_split(data, train_size=0.7)
+    data_train = np.load(f"{os.path.dirname(__file__)}/../../data/fashion_train.npy")
+    data_test = np.load(f"{os.path.dirname(__file__)}/../../data/fashion_test.npy")
     py_clf, py_loss_history = get_trained_pytorch_model(np.copy(data_train))
     own_clf = get_own_trained_model(np.copy(data_train))
-    x_val = data_val[:, :784].astype(np.float_) / 255
-    y_val = data_val[:, 784].astype(np.int_)
-    print(f"(OWN) Accuracy: {accuracy_score(y_val, own_clf.predict(x_val)):.2%}")
-    batch_val = DataLoader(Data(data_val), batch_size=len(data_val))
-    x_val, y_val = next(iter(batch_val))
-    print(f"(PYT) Accuracy: {accuracy_score(y_val, py_clf.predict(x_val)):.2%}")
+    x_test = data_test[:, :784].astype(np.float_) / 255
+    y_test = data_test[:, 784].astype(np.int_)
+    own_stats = calc_stats(own_clf, x_test, y_test)
+    batch_test = DataLoader(Data(data_test), batch_size=len(data_test))
+    x_test, y_test = next(iter(batch_test))
+    py_stats = calc_stats(py_clf, x_test, y_test)
     plot_loss(py_loss_history, "PyTorch FFNN")
     plot_loss(own_clf.loss_history, "Own FFNN")
+    with open('results_ffnn.tex', 'w') as f:
+        f.write(own_stats.to_latex())
+        f.write(py_stats.to_latex())
 
 
 if __name__ == "__main__":

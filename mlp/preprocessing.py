@@ -30,7 +30,7 @@ def one_hot(y: IntArray, categories: Sequence[int] | None = None) -> UInt8Array:
 
 
 def train_test_split(
-    *arrays: ScalarArray, train_split: float, seed: int | None = None
+    *arrays: ScalarArray, train_size: float, seed: int | None = None
 ) -> Sequence[ScalarArray]:
     if len(arrays) == 0:
         raise ValueError("At least one array must be provided as a positional argument")
@@ -42,7 +42,7 @@ def train_test_split(
     n = arrays[0].shape[0]
     indices = np.arange(n)
     train_indices = np.random.default_rng(seed=seed).choice(
-        indices, replace=False, size=math.floor(train_split * n)
+        indices, replace=False, size=math.floor(train_size * n)
     )
     test_mask = np.ones(n, dtype=bool)
     test_mask[train_indices] = False
