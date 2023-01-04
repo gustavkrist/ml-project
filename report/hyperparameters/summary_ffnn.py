@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import json
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-with open("results_ffnn_.json", "r") as f:
+with open("results_ffnn_.json") as f:
     results = json.load(f)
 
 for i, result in enumerate(results):
@@ -14,5 +16,7 @@ for i, result in enumerate(results):
     fig, ax = plt.subplots()
     for loss_hist in loss_histories:
         ax.plot(list(range(len(loss_hist))), loss_hist)
-    ax.set_title(f"{i+1}, {avg_acc:.2%} Acc, {avg_auc:.2%} Auc, {avg_train_time:.2f}s to train")
+    ax.set_title(
+        f"{i+1}, {avg_acc:.2%} Acc, {avg_auc:.2%} Auc, {avg_train_time:.2f}s to train"
+    )
     plt.show()
