@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import roc_auc_score
@@ -149,8 +150,16 @@ def plot_loss(loss_history, clf_name):
     plt.savefig(f"{figpath}/{filename}", dpi=400, bbox_inches="tight")
 
 
-def calc_stats(model, x_test, y_test):
+def calc_stats(model, x_test, y_test, which):
     preds = model.predict(x_test)
+    disp = ConfusionMatrixDisplay.from_predictions(
+        y_test,
+        preds,
+        labels=(0, 1, 2, 3, 4),
+        display_labels=(0, 1, 2, 3, 4),
+    )
+    disp.plot(cmap="Blues")
+    plt.savefig(f"figures/confusion_matrix_ffnn_{which}.png", dpi=400)
     results = [accuracy_score(y_test, preds)]
     pred_proba = model.predict_proba(x_test)
     precision, recall, f1_score, _ = precision_recall_fscore_support(
@@ -175,10 +184,10 @@ def main():
     own_clf = get_own_trained_model(np.copy(data_train))
     x_test = data_test[:, :784].astype(np.float_) / 255
     y_test = data_test[:, 784].astype(np.int_)
-    own_stats = calc_stats(own_clf, x_test, y_test)
+    own_stats = calc_stats(own_clf, x_test, y_test, "own")
     batch_test = DataLoader(Data(data_test), batch_size=len(data_test))
     x_test, y_test = next(iter(batch_test))
-    py_stats = calc_stats(py_clf, x_test, y_test)
+    py_stats = calc_stats(py_clf, x_test, y_test, "pytorch")
     plot_loss(py_loss_history, "PyTorch FFNN")
     plot_loss(own_clf.loss_history, "Own FFNN")
     with open("results_ffnn.tex", "w") as f:
