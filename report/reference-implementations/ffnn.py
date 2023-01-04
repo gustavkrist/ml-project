@@ -9,6 +9,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
@@ -149,12 +150,22 @@ def plot_loss(loss_history, clf_name):
 
 
 def calc_stats(model, x_test, y_test):
-    results = [accuracy_score(y_test, model.predict(x_test))]
+    preds = model.predict(x_test)
+    results = [accuracy_score(y_test, preds)]
     pred_proba = model.predict_proba(x_test)
+    precision, recall, f1_score, _ = precision_recall_fscore_support(
+        y_test, preds, average="macro"
+    )
     if isinstance(model, nn.Module):
         pred_proba = pred_proba.detach()
     results.append(roc_auc_score(y_test, pred_proba, multi_class="ovo"))
-    return pd.DataFrame({"Metric": ["Accuracy", "ROC AUC Score"], "Result": results})
+    results.extend([precision, recall, f1_score])
+    return pd.DataFrame(
+        {
+            "Metric": ["Accuracy", "ROC AUC Score", "Precision", "Recall", "F1-Score"],
+            "Result": results,
+        }
+    )
 
 
 def main():
@@ -170,9 +181,9 @@ def main():
     py_stats = calc_stats(py_clf, x_test, y_test)
     plot_loss(py_loss_history, "PyTorch FFNN")
     plot_loss(own_clf.loss_history, "Own FFNN")
-    with open('results_ffnn.tex', 'w') as f:
-        f.write(own_stats.to_latex())
-        f.write(py_stats.to_latex())
+    with open("results_ffnn.tex", "w") as f:
+        f.write(own_stats.to_latex(index=False))
+        f.write(py_stats.to_latex(index=False))
 
 
 if __name__ == "__main__":
