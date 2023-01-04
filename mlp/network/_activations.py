@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import warnings
 
-import numexpr as ne
 import numpy as np
 
 from mlp.types import FloatArray
@@ -10,23 +9,19 @@ from mlp.types import ScalarArray
 
 
 def relu(x: ScalarArray) -> FloatArray:
-    return ne.evaluate("where(x > 0, x, 0)", casting="no")
+    return np.where(x > 0, x, 0)
 
 
 def relu_der(x: ScalarArray) -> FloatArray:
-    a = np.float32(0.0)  # noqa: F841
-    b = np.float32(0.0)  # noqa: F841
-    return ne.evaluate("where(x < 0, a, b)", casting="no")
+    return np.where(x < 0, 0, 1)
 
 
 def leaky_relu(x: ScalarArray) -> FloatArray:
-    a = np.float32(0.01)  # noqa: F841
-    return ne.evaluate("where(x < 0, a * x, x)", casting="no")
+    return np.where(x < 0, 0.01 * x, x)
 
 
 def leaky_relu_der(x: ScalarArray) -> FloatArray:
-    a = np.float32(0.01)  # noqa: F841
-    return ne.evaluate("where(x < 0, a, 1)", casting="no")
+    return np.where(x < 0, 0.01, 1)
 
 
 def sigmoid(x: ScalarArray) -> FloatArray:

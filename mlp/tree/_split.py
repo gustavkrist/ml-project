@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import numba as nb
 import numpy as np
 
 from mlp.metrics import gini_score
@@ -9,19 +8,11 @@ from mlp.types import Float32Array
 from mlp.types import UInt8Array
 
 
-@nb.njit(
-    nb.types.Tuple((nb.int64, nb.float32, nb.float32, nb.float32, nb.float32))(
-        nb.float32[:, :], nb.uint8[:]
-    ),
-    parallel=True,
-    nogil=True,
-    boundscheck=False,
-)
 def find_best_split(
     x: Float32Array, y: UInt8Array
 ) -> tuple[np.int_, np.float32, np.float32, np.float32, np.float32]:
     splits = np.full((x.shape[1], 4), np.inf, dtype=np.float_)
-    for split_feature in nb.prange(x.shape[1]):  # pylint: disable=E1133
+    for split_feature in range(x.shape[1]):
         feature_vals = np.unique(x[:, split_feature])
         if len(feature_vals) < 2:
             continue

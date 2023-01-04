@@ -83,7 +83,9 @@ class ForwardFeedNN:
     def _get_splits(
         self, x: ScalarArray, y: ScalarArray, train_size: float
     ) -> tuple[Float32Array, Float32Array, UInt8Array, UInt8Array]:
-        x_train, x_val, y_train, y_val = train_test_split(x, y, train_size=train_size, seed=1)
+        x_train, x_val, y_train, y_val = train_test_split(
+            x, y, train_size=train_size, seed=1
+        )
         x_train = np.copy(x_train.astype(np.float32))
         x_val = np.copy(x_val.astype(np.float32))
         y_train = np.copy(y_train.astype(np.uint8))
@@ -126,7 +128,11 @@ class ForwardFeedNN:
             else:
                 accuracy_max = accuracy
                 n_since_acc_max = 0
-            if self.early_stopping > 0 and i >= self.min_epochs and n_since_acc_max == self.early_stopping:
+            if (
+                self.early_stopping > 0
+                and i >= self.min_epochs
+                and n_since_acc_max == self.early_stopping
+            ):
                 return
             desc = (
                 f"Epoch: {i+1} - Loss: {loss:.3f} - Acc: {accuracy:.2%} - "

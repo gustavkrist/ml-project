@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import numba as nb
 import numpy as np
 
 from mlp.types import FloatArray
@@ -8,7 +7,6 @@ from mlp.types import IntArray
 from mlp.types import UInt8Array
 
 
-@nb.njit(nb.float32(nb.uint8[:]))
 def gini_score(ys: UInt8Array) -> np.float32:
     counts = np.bincount(ys)
     class_priors = np.array(
@@ -24,7 +22,6 @@ def weighted_gini_array(y_left: UInt8Array, y_right: UInt8Array) -> np.float32:
     return weighted_gini(n_t, n_l, n_r, gini_score(y_left), gini_score(y_right))
 
 
-@nb.njit(nb.float32(nb.int64, nb.int64, nb.int64, nb.float32, nb.float32))
 def weighted_gini(
     n_t: int, n_l: int, n_r: int, imp_left: np.float32, imp_right: np.float32
 ) -> np.float32:

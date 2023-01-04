@@ -44,7 +44,7 @@ class Node:
         self.tree = tree
         self.impurity = impurity
         self.feature: np.int_ | None = None
-        self.threshold: np.float_ | None = None
+        self.threshold: np.float32 | None = None
         self.left: Node | None = None
         self.right: Node | None = None
         self.label: int | None = None
